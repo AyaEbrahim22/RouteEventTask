@@ -1,12 +1,10 @@
-body {
-    background-color: #e7ecef;
-}
-
+/* Text selection style */
 ::selection {
     color: #6096ba;
     background: #c9d2db;
 }
 
+/* Scroll bar style */
 ::-webkit-scrollbar {
     width: 13px;
 }
@@ -17,10 +15,15 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-    background: #3a72b1c5 ;
+    background: #3a72b1c5;
     border-radius: 5px;
 }
 
+body{
+    background-color: #e7ecef;
+}
+
+/* Home component style */
 .mainComponent {
     margin-bottom: 30px;
     margin-top: 30px;
@@ -49,6 +52,11 @@ thead tr th {
 
 tr td {
     color: #464646 !important;
+}
+
+tbody tr:hover{
+   box-shadow: 0px 3px 8px #284550;
+   
 }
 
 .table-striped-columns>:not(caption)>tr>:nth-child(2n) {

@@ -1,8 +1,11 @@
 import axios from 'axios'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import TransactionChart from '../TransactionChart/TransactionChart'
 
 export default function Home() {
+
+    const chartComponentRef = useRef(null);
+    const [showChart, setShowChart] = useState(false);
 
     const [customers, setCustomers] = useState([])
     const [transactions, setTransactions] = useState([])
@@ -10,38 +13,48 @@ export default function Home() {
     const [filterByAmount, setFilterByAmount] = useState([])
     const [selectedCustomer, setSelectedCustomer] = useState(null);
 
+    const [beforeDataComming, setBeforeDataComming] = useState(false);
+
+    // Function to get all customers IDs and names
     async function getCustomers() {
 
-        // 'http://localhost:5000/customers' For json server
-        
+        // http://localhost:5000/customers For json server (Local Server) 'npm run server'
+        // https://6693fde9c6be000fa07dd61e.mockapi.io/api/v1/customers  External API for GitHub pages
+
         let { data } = await axios.get('https://6693fde9c6be000fa07dd61e.mockapi.io/api/v1/customers')
             .catch(error => console.log('Error fetching Customers data:', error));
         setCustomers(data)
         setFilteredCustomers(data)
+        setBeforeDataComming(true)
     }
 
+    // Function to get all customers transactions
     async function getTransactions() {
 
-        // 'http://localhost:5000/transactions' For json server
+        // http://localhost:5000/transactions ---> For json server (Local Server) 'npm run server'
+        // https://6693fde9c6be000fa07dd61e.mockapi.io/api/v1/transactions ---> External API for GitHub pages
 
         let { data } = await axios.get('https://6693fde9c6be000fa07dd61e.mockapi.io/api/v1/transactions')
             .catch(error => console.log('Error fetching Transactions data:', error));
         setTransactions(data)
         setFilterByAmount(data)
+        setBeforeDataComming(true)
     }
 
+    // Function to search for custmer name
     function searchForName(value) {
         setFilteredCustomers(customers.filter(customer => customer.name.toLowerCase().includes(value.toLowerCase())))
 
         if (!value) {
             setFilteredCustomers(customers)
         }
-        if (customers.filter(customer => customer.name.toLowerCase().includes(value.toLowerCase())).length == 0) {
-            setFilteredCustomers('')
+        if (customers.filter(customer => customer.name.toLowerCase().includes(value.toLowerCase())).length === 0) {
+            setFilteredCustomers([])
 
         }
     }
 
+    // Function to search for specific amount
     function searchForAmount(value) {
 
         setFilterByAmount(transactions.filter(transaction => transaction.amount.toString().includes(value)));
@@ -50,20 +63,31 @@ export default function Home() {
             setFilterByAmount(transactions)
         }
 
-        if (transactions.filter(transaction => transaction.amount.toString().includes(value)).length == 0) {
-            setFilterByAmount('')
+        if (transactions.filter(transaction => transaction.amount.toString().includes(value)).length === 0) {
+            setFilterByAmount([])
 
         }
     }
 
+    // Function to get amount's chart component
     function handleCustomerClick(customer) {
         setSelectedCustomer(customer)
+        setShowChart(true);
     }
 
     useEffect(() => {
         getCustomers()
         getTransactions()
     }, [])
+
+    useEffect(() => {
+        // condition to handle scrolling top to the chart component
+        if (showChart && chartComponentRef.current) {
+            chartComponentRef.current.scrollIntoView({ behavior: 'smooth' });
+            setShowChart(false);
+        }
+    }, [showChart]);
+
 
     return <>
         <div className='mainComponent'>
@@ -77,30 +101,38 @@ export default function Home() {
                 <table className='table table-bordered border-dark text-center table-striped-columns'>
                     <thead>
                         <tr>
-                            <th> Customer ID	</th>
+                            <th> Customer ID</th>
                             <th> Customer Name</th>
-                            <th> Transaction Date	</th>
-                            <th> Transaction Amount	</th>
+                            <th> Transaction Date</th>
+                            <th> Transaction Amount</th>
                         </tr>
                     </thead>
                     <tbody>
 
-                        {(filterByAmount && filteredCustomers) ? <>{filteredCustomers?.map(customer => filterByAmount?.filter(transaction => transaction.customer_id == customer.id).map(transaction => <tr key={transaction.id} onClick={() => handleCustomerClick(customer)} role='button'>
+                        {(filterByAmount.length && filteredCustomers.length) !== 0 ? <>{filteredCustomers.map(customer => filterByAmount.filter(transaction => transaction.customer_id === parseInt(customer.id)).map(transaction => <tr key={transaction.id} onClick={() => handleCustomerClick(customer)} role='button'>
 
                             <td>{customer.id}</td>
                             <td>{customer.name}</td>
                             <td>{transaction.date}</td>
                             <td>{transaction.amount}</td>
-                        </tr>))}</> : <tr>
-                            <th colSpan={4} className='text-danger'> No Matches</th>
-                        </tr>}
+                        </tr>))}</> : <>
+
+                            {beforeDataComming ? <tr>
+                                <th colSpan={4} className='text-danger'> No Matches</th>
+                            </tr> : ''}
+                        </>
+
+                        }
 
                     </tbody>
                 </table>
 
                 {selectedCustomer ? <>
                     <h3 className='text-center my-4 text-secondary'>Transactions for {selectedCustomer.name}</h3>
-                    <TransactionChart transactions={filterByAmount.filter(transaction => transaction.customer_id == selectedCustomer.id)} />
+
+                    <div ref={chartComponentRef}>
+                        <TransactionChart transactions={filterByAmount.filter(transaction => transaction.customer_id === parseInt(selectedCustomer.id))} />
+                    </div>
                 </>
                     : ''
                 }
@@ -109,11 +141,5 @@ export default function Home() {
         </div>
     </>
 }
-
-
-
-
-
-
 
 
