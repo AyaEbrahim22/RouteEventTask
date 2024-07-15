@@ -20,8 +20,6 @@ export default function TransactionChart({ transactions }) {
 
 
     return <>
-
-        <div id='chart'>
             <BarChart
                 width={600}
                 height={300}
@@ -37,8 +35,6 @@ export default function TransactionChart({ transactions }) {
                 <Legend />
                 <Bar dataKey="amount" fill="#6096ba" />
             </BarChart>
-        </div>
-
     </>
 }
 
